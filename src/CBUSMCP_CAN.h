@@ -106,8 +106,12 @@ public:
   CBUSMCP_CAN(CBUSConfig *the_config);
   ~CBUSMCP_CAN();
 
-  // these methods are declared virtual in the base class and must be implemented by the derived class
+  // these methods are declared virtual in the base class and must be implemented by the derived class#ifdef ARDUINO_ARCH_RP2040
+#ifdef ARDUINO_ARCH_RP2040
+  bool begin(bool poll = false, SPIClassRP2040 spi = SPI);    // note default args
+#else
   bool begin(bool poll = false, SPIClass spi = SPI);    // note default arguments
+#endif
   bool available(void);
   CANFrame getNextMessage(void);
   bool sendMessage(CANFrame *msg, bool rtr = false, bool ext = false, byte priority = DEFAULT_PRIORITY);    // note default arguments
@@ -116,7 +120,13 @@ public:
   // these methods are specific to this implementation
   // they are not declared or implemented by the base CBUS class
   void setNumBuffers(byte num_rx_buffers, byte _num_tx_buffers = 2);
+
+#ifdef ARDUINO_ARCH_RP2040
+  void setPins(byte cs_pin, byte int_pin, byte mosi_pin, byte miso_pin, byte sck_pin);
+#else
   void setPins(byte cs_pin, byte int_pin);
+#endif
+
   void printStatus(void);
   void setOscFreq(unsigned long freq);
 
@@ -129,5 +139,9 @@ private:
   byte _csPin, _intPin;
   byte _num_rx_buffers, _num_tx_buffers;
   bool _poll;
+#ifdef ARDUINO_ARCH_RP2040
+  byte _mosi_pin, _miso_pin, _sck_pin;
+#endif
+
 };
 

@@ -36,7 +36,7 @@
 */
 
 // AVR libC library
-#include <util/atomic.h>
+// #include <util/atomic.h>
 
 // Arduino libraries
 #include <SPI.h>
@@ -92,8 +92,12 @@ CBUSMCP_CAN::~CBUSMCP_CAN() {
 /// default poll arg is set to false, so as not to break existing code
 //
 
-bool CBUSMCP_CAN::begin(bool poll, SPIClass spi) {
-
+#ifdef ARDUINO_ARCH_RP2040
+bool CBUSMCP_CAN::begin(bool poll, SPIClassRP2040 spi)
+#else
+bool CBUSMCP_CAN::begin(bool poll, SPIClass spi)
+#endif
+{
   _numMsgsSent = 0;
   _numMsgsRcvd = 0;
   _poll = poll;
@@ -101,6 +105,13 @@ bool CBUSMCP_CAN::begin(bool poll, SPIClass spi) {
   // allocate tx and tx buffers -- tx is currently unused
   rx_buffer = new circular_buffer(_num_rx_buffers);
   tx_buffer = new circular_buffer(_num_tx_buffers);
+
+#ifdef ARDUINO_ARCH_RP2040
+  spi.setTX(_mosi_pin);
+  spi.setRX(_miso_pin);
+  spi.setSCK(_sck_pin);
+  spi.setCS(_csPin);
+#endif
 
   // init SPI
   spi.begin();
@@ -212,11 +223,22 @@ void CBUSMCP_CAN::reset(void) {
 /// set the CS and interrupt pins - option to override defaults
 //
 
-void CBUSMCP_CAN::setPins(byte cs_pin, byte int_pin) {
+#ifdef ARDUINO_ARCH_RP2040
+void CBUSMCP_CAN::setPins(byte cs_pin, byte int_pin, byte mosi_pin, byte miso_pin, byte sck_pin)
+#else
+void CBUSMCP_CAN::setPins(byte cs_pin, byte int_pin)
+#endif
+{
+
+#ifdef ARDUINO_ARCH_RP2040
+  _mosi_pin = mosi_pin;
+  _miso_pin = miso_pin;
+  _sck_pin = sck_pin;
+#endif
+
   _csPin = cs_pin;
   _intPin = int_pin;
 }
-
 //
 /// set the number of CAN frame receive buffers
 /// this can be tuned according to bus load and available memory
@@ -316,15 +338,15 @@ CANFrame *circular_buffer::get(void) {
 
   // protect against changes to the buffer by suspending interrupts
 
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    if (_size > 0) {
-      p = &_buffer[_tail]._item;
-      _full = false;
-      _tail = (_tail + 1) % _capacity;
-      _size = size();
-      ++_gets;
-    }
+  // ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+  if (_size > 0) {
+    p = &_buffer[_tail]._item;
+    _full = false;
+    _tail = (_tail + 1) % _capacity;
+    _size = size();
+    ++_gets;
   }
+  // }
 
   return p;
 }
