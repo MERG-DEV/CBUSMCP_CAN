@@ -119,17 +119,17 @@ bool CBUSMCP_CAN::begin(bool poll, SPIClass spi)
   canp = new MCP_CAN(_csPin);
 
   if (canp == nullptr) {
-    Serial << F("> error creating MCP_CAN object") << endl;
+    // DEBUG_SERIAL << F("> error creating MCP_CAN object") << endl;
     return false;
   }
 
   if (canp->begin(MCP_ANY, CAN_125KBPS, (_osc_freq == 16000000UL) ? MCP_16MHZ : MCP_8MHZ) != CAN_OK) {
-    Serial << F("> error from MCP_CAN begin") << endl;
+    // DEBUG_SERIAL << F("> error from MCP_CAN begin") << endl;
     return false;
   }
 
   if (canp->setMode(MCP_NORMAL) != MCP2515_OK) {
-    Serial << F("> error setting CAN mode") << endl;
+    // DEBUG_SERIAL << F("> error setting CAN mode") << endl;
     return false;
   }
 
@@ -202,10 +202,15 @@ bool CBUSMCP_CAN::sendMessage(CANFrame *msg, bool rtr, bool ext, byte priority) 
 
 void CBUSMCP_CAN::printStatus(void) {
 
-  Serial << F("> CBUS status:");
-  Serial << F(" messages received = ") << _numMsgsRcvd << F(", sent = ") << _numMsgsSent << F(", receive errors = ") << \
-         canp->errorCountRX() << F(", transmit errors = ") << canp->errorCountTX() << F(", error flag = ") \
-         << canp->getError() << endl;
+  // removed so that no libraries produce serial output
+  // can be implemented in user's sketch
+
+  /*
+    DEBUG_SERIAL << F("> CBUS status:");
+    DEBUG_SERIAL << F(" messages received = ") << _numMsgsRcvd << F(", sent = ") << _numMsgsSent << F(", receive errors = ") << \
+           canp->errorCountRX() << F(", transmit errors = ") << canp->errorCountTX() << F(", error flag = ") \
+          << canp->getError() << endl;
+  */
   return;
 }
 

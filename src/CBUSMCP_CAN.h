@@ -37,6 +37,10 @@
 
 #pragma once
 
+#ifndef DEBUG_SERIAL
+#define DEBUG_SERIAL Serial
+#endif
+
 // header files
 
 #include <SPI.h>
