@@ -123,7 +123,23 @@ bool CBUSMCP_CAN::begin(bool poll, SPIClass spi)
     return false;
   }
 
-  if (canp->begin(MCP_ANY, CAN_125KBPS, (_osc_freq == 16000000UL) ? MCP_16MHZ : MCP_8MHZ) != CAN_OK) {
+  byte freq = MCP_16MHZ;
+
+  switch (_osc_freq) {
+  case 8000000UL:
+    freq = MCP_8MHZ;
+    break;
+  case 16000000UL:
+    freq = MCP_16MHZ;
+    break;
+  case 20000000UL:
+    freq = MCP_20MHZ;
+    break;
+  default:
+    return false;
+  }
+
+  if (canp->begin(MCP_ANY, CAN_125KBPS, freq) != CAN_OK) {
     // DEBUG_SERIAL << F("> error from MCP_CAN begin") << endl;
     return false;
   }
@@ -256,7 +272,7 @@ void CBUSMCP_CAN::setNumBuffers(byte num_rx_buffers, byte _num_tx_buffers) {
 
 //
 /// set the MCP2515 crystal frequency
-/// default is 16MHz but some modules have an 8MHz crystal
+/// default is 16MHz but some modules have an 8MHz or 20MHz crystal
 //
 
 void CBUSMCP_CAN::setOscFreq(unsigned long freq) {
@@ -341,9 +357,6 @@ CANFrame *circular_buffer::get(void) {
 
   // should always call ::available first to avoid returning null pointer
 
-  // protect against changes to the buffer by suspending interrupts
-
-  // ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
   if (_size > 0) {
     p = &_buffer[_tail]._item;
     _full = false;
@@ -351,7 +364,6 @@ CANFrame *circular_buffer::get(void) {
     _size = size();
     ++_gets;
   }
-  // }
 
   return p;
 }
