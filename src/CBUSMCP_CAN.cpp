@@ -93,9 +93,9 @@ CBUSMCP_CAN::~CBUSMCP_CAN() {
 //
 
 #ifdef ARDUINO_ARCH_RP2040
-bool CBUSMCP_CAN::begin(bool poll, SPIClassRP2040 spi)
+bool CBUSMCP_CAN::begin(bool poll, SPIClassRP2040& spi)
 #else
-bool CBUSMCP_CAN::begin(bool poll, SPIClass spi)
+bool CBUSMCP_CAN::begin(bool poll, SPIClass& spi)
 #endif
 {
   _numMsgsSent = 0;
@@ -116,7 +116,7 @@ bool CBUSMCP_CAN::begin(bool poll, SPIClass spi)
   // init SPI
   spi.begin();
 
-  canp = new MCP_CAN(_csPin);
+  canp = new MCP_CAN(&spi, _csPin);     // pass pointer to SPI object to support devices with multiple SPI peripherals
 
   if (canp == nullptr) {
     // DEBUG_SERIAL << F("> error creating MCP_CAN object") << endl;
