@@ -196,7 +196,27 @@ bool CBUSMCP_CAN::sendMessage(CANFrame *msg, bool rtr, bool ext, byte priority) 
   // rtr and ext default to false unless arguments are supplied - see method definition in .h
   // priority defaults to 1011 low/medium
 
+  bool ok;
+
+  msg->rtr = rtr;
+  msg->ext = ext;
   makeHeader(msg, priority);                      // default priority unless user overrides
+
+  ok = sendMessageNoUpdate(msg);
+
+  // call user transmit handler
+  if (transmithandler != nullptr) {
+    (void)(*transmithandler)(msg);
+  }
+
+  return ok;
+}
+
+//
+///
+//
+
+bool CBUSMCP_CAN::sendMessageNoUpdate(CANFrame *msg) {
 
   if (ext)
     msg->id |= 0x80000000;
@@ -211,6 +231,7 @@ bool CBUSMCP_CAN::sendMessage(CANFrame *msg, bool rtr, bool ext, byte priority) 
     return false;
   }
 }
+
 
 //
 /// display the CAN bus status instrumentation
