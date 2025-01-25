@@ -198,9 +198,16 @@ bool CBUSMCP_CAN::sendMessage(CANFrame *msg, bool rtr, bool ext, byte priority) 
 
   bool ok;
 
+  makeHeader(msg, priority);                      // default priority unless user overrides
+
   msg->rtr = rtr;
   msg->ext = ext;
-  makeHeader(msg, priority);                      // default priority unless user overrides
+
+  if (ext)
+    msg->id |= 0x80000000;
+
+  if (rtr)
+    msg->id |= 0x40000000;
 
   ok = sendMessageNoUpdate(msg);
 
@@ -217,12 +224,6 @@ bool CBUSMCP_CAN::sendMessage(CANFrame *msg, bool rtr, bool ext, byte priority) 
 //
 
 bool CBUSMCP_CAN::sendMessageNoUpdate(CANFrame *msg) {
-
-  if (ext)
-    msg->id |= 0x80000000;
-
-  if (rtr)
-    msg->id |= 0x40000000;
 
   if (canp->sendMsgBuf(msg->id, msg->len, msg->data) == CAN_OK) {
     ++_numMsgsSent;
